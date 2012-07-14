@@ -55,7 +55,7 @@ namespace MathNet.Numerics.LinearAlgebra.Complex32
         public DiagonalMatrix(int order)
             : base(order)
         {
-            Data = new Complex32[order * order];
+            Data = new Complex32[order];
         }
 
         /// <summary>
@@ -1199,16 +1199,21 @@ namespace MathNet.Numerics.LinearAlgebra.Complex32
 
             if (rowIndex > columnIndex && columnIndex + columnLength > rowIndex)
             {
-                for (var i = 0; rowIndex - columnIndex + i < Math.Min(columnLength, rowLength); i++)
+                int columnInit = rowIndex - columnIndex;
+                int end = Math.Min(columnLength, rowLength + columnInit);
+                for (var i = 0; columnInit + i < end; i++)
                 {
-                    result[i, rowIndex - columnIndex + i] = Data[rowIndex + i];
+                    result[i, columnInit + i] = Data[rowIndex + i];
                 }
             }
             else if (rowIndex < columnIndex && rowIndex + rowLength > columnIndex)
             {
-                for (var i = 0; rowIndex - columnIndex + i < Math.Min(columnLength, rowLength); i++)
+                int rowInit = columnIndex - rowIndex;
+                int end = Math.Min(columnLength + rowInit, rowLength);
+
+                for (var i = 0; rowInit + i < end; i++)
                 {
-                    result[columnIndex - rowIndex + i, i] = Data[columnIndex + i];
+                    result[rowInit + i, i] = Data[columnIndex + i];
                 }
             }
             else
