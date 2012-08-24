@@ -77,7 +77,8 @@ namespace MathNet.Numerics.Distributions
         /// scale 1.0 and degrees of freedom 1. The distribution will
         /// be initialized with the default <seealso cref="System.Random"/> random number generator.
         /// </summary>
-        public StudentT() : this(0.0, 1.0, 1.0)
+        public StudentT()
+            : this(0.0, 1.0, 1.0)
         {
         }
 
@@ -358,9 +359,21 @@ namespace MathNet.Numerics.Distributions
             }
 
             var d = (x - _location) / _scale;
-            return SpecialFunctions.Gamma((_dof + 1.0) / 2.0)
+            double _scale_dof = _dof / 2.0;
+            double _dof_remainder = _scale_dof - Math.Floor(_scale_dof);
+            //Avoid division by zero
+            if (_dof_remainder == 0)
+            { _dof_remainder++; }
+            double GammaFactor = SpecialFunctions.Gamma(_dof_remainder + 0.5) / SpecialFunctions.Gamma(_dof_remainder);
+            //Compute ratio of Gamma functions using recurrence relations
+            while (_dof_remainder < _scale_dof)
+            {
+                GammaFactor *= (_dof_remainder + 0.5) / (_dof_remainder);
+                _dof_remainder++;
+            }
+
+            return GammaFactor
                    * Math.Pow(1.0 + (d * d / _dof), -0.5 * (_dof + 1.0))
-                   / SpecialFunctions.Gamma(_dof / 2.0)
                    / Math.Sqrt(_dof * Math.PI)
                    / _scale;
         }
@@ -379,9 +392,21 @@ namespace MathNet.Numerics.Distributions
             }
 
             var d = (x - _location) / _scale;
-            return SpecialFunctions.GammaLn((_dof + 1.0) / 2.0)
+            double _scale_dof = _dof / 2.0;
+            double _dof_remainder = _scale_dof - Math.Floor(_scale_dof);
+            //Avoid Gamma(0)
+            if (_dof_remainder == 0)
+            { _dof_remainder++; }
+            double GammaLnFactor = SpecialFunctions.GammaLn(_dof_remainder + 0.5) - SpecialFunctions.GammaLn(_dof_remainder);
+            //Compute Gamma functions using recurrence
+            while (_dof_remainder < _scale_dof)
+            {
+                GammaLnFactor += Math.Log((_dof_remainder + 0.5)/_dof_remainder);
+                _dof_remainder++;
+            }
+
+            return GammaLnFactor
                    - (0.5 * ((_dof + 1.0) * Math.Log(1.0 + (d * d / _dof))))
-                   - SpecialFunctions.GammaLn(_dof / 2.0)
                    - (0.5 * Math.Log(_dof * Math.PI)) - Math.Log(_scale);
         }
 
